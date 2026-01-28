@@ -1,0 +1,166 @@
+'use client'
+
+import { Clock, Users, Calendar, Star } from "lucide-react";
+
+const ClassesPage = () => {
+  const classes = [
+    {
+      id: 1,
+      name: "Zumba",
+      description: "High-energy dance fitness combining Latin rhythms with easy-to-follow moves",
+      duration: "45 min",
+      capacity: "25 people",
+      schedule: "Mon, Wed, Fri - 7:00 PM",
+      instructor: "Maria Rodriguez",
+      level: "All Levels",
+      image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=400&h=300&fit=crop"
+    },
+    {
+      id: 2,
+      name: "Abs Training",
+      description: "Intensive core workout targeting abdominal muscles and building strength",
+      duration: "30 min",
+      capacity: "15 people",
+      schedule: "Tue, Thu, Sat - 6:30 AM",
+      instructor: "John Smith",
+      level: "Intermediate",
+      image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop"
+    },
+    {
+      id: 3,
+      name: "Cardio Blast",
+      description: "High-intensity cardio workout to boost endurance and burn calories",
+      duration: "40 min",
+      capacity: "20 people",
+      schedule: "Daily - 6:00 AM, 8:00 PM",
+      instructor: "Sarah Johnson",
+      level: "All Levels",
+      image: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=300&fit=crop"
+    },
+    {
+      id: 4,
+      name: "Yoga Flow",
+      description: "Gentle flowing movements to improve flexibility and mindfulness",
+      duration: "60 min",
+      capacity: "18 people",
+      schedule: "Mon, Wed, Fri - 9:00 AM",
+      instructor: "Lisa Chen",
+      level: "Beginner",
+      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop"
+    },
+    {
+      id: 5,
+      name: "HIIT Training",
+      description: "High-Intensity Interval Training for maximum calorie burn",
+      duration: "35 min",
+      capacity: "12 people",
+      schedule: "Tue, Thu - 7:00 AM, 6:00 PM",
+      instructor: "Mike Wilson",
+      level: "Advanced",
+      image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=300&fit=crop"
+    },
+    {
+      id: 6,
+      name: "Pilates",
+      description: "Low-impact exercises focusing on core strength and posture",
+      duration: "50 min",
+      capacity: "16 people",
+      schedule: "Mon, Wed, Fri - 11:00 AM",
+      instructor: "Emma Davis",
+      level: "All Levels",
+      image: "https://images.unsplash.com/photo-1506629905607-d405b7a30db9?w=400&h=300&fit=crop"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header Section */}
+      <section className="py-16 bg-gradient-to-r from-gray-50 to-white">
+        <div className="container mx-auto px-6 text-center">
+          <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">
+            Fitness <span className="gradient-text">Classes</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Join our diverse range of fitness classes designed for all levels. 
+            From high-energy Zumba to focused abs training, find your perfect workout.
+          </p>
+        </div>
+      </section>
+
+      {/* Classes Grid */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {classes.map((classItem) => (
+              <div
+                key={classItem.id}
+                className="rounded-2xl border-2 border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow duration-300"
+              >
+                <div className="mb-4">
+                  <img
+                    src={classItem.image}
+                    alt={classItem.name}
+                    className="w-full h-48 object-cover rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-gray-900">{classItem.name}</h3>
+                    <span className="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700">
+                      {classItem.level}
+                    </span>
+                  </div>
+
+                  <p className="text-gray-600 leading-relaxed">
+                    {classItem.description}
+                  </p>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Clock className="w-4 h-4" />
+                      <span>{classItem.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Users className="w-4 h-4" />
+                      <span>{classItem.capacity}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Calendar className="w-4 h-4" />
+                      <span>{classItem.schedule}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Star className="w-4 h-4" />
+                      <span>Instructor: {classItem.instructor}</span>
+                    </div>
+                  </div>
+
+                  <button className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-blue-500 text-white font-semibold rounded-xl hover:scale-105 transition-transform duration-200">
+                    Book Class
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Ready to Start Your Fitness Journey?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Join our community and get access to all classes with our membership plans
+          </p>
+          <button className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-blue-500 text-white font-semibold rounded-xl hover:scale-105 transition-transform duration-200">
+            View Membership Plans
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default ClassesPage;
