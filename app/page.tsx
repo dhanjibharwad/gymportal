@@ -1,7 +1,7 @@
 import HeroSection from "@/app/components/HeroSection";
 import IntroSection from "@/app/components/IntroSection";
 import EquipmentSlider from "@/app/components/EquipmentSlider";
-// import CardioSection from "@/components/CardioSection";
+import CardioSection from "@/app/components/CardioSection";
 import ProgramsSection from "@/app/components/ProgramsSection";
 // import PricingSection from "@/components/PricingSection";
 // import TestimonialsSection from "@/components/TestimonialsSection";
@@ -12,7 +12,7 @@ const Home = () => {
       <HeroSection />
       <IntroSection />
       <EquipmentSlider />
-      {/* <CardioSection /> */}
+      <CardioSection />
       <ProgramsSection />
       {/* <PricingSection />
       <TestimonialsSection /> */}
