@@ -55,6 +55,7 @@ interface FormErrors {
 const AddMemberPage = () => {
   const today = new Date().toISOString().split('T')[0];
   const [showSuccess, setShowSuccess] = useState(false);
+  const [memberId, setMemberId] = useState<number | null>(null);
   const [toast, setToast] = useState<{show: boolean, message: string, type: 'success' | 'error'}>({show: false, message: '', type: 'success'});
   
   const [formData, setFormData] = useState<FormData>({
@@ -242,9 +243,11 @@ const AddMemberPage = () => {
         const result = await response.json();
 
         if (result.success) {
+          setMemberId(result.memberId);
           setShowSuccess(true);
           setTimeout(() => {
             setShowSuccess(false);
+            setMemberId(null);
             resetForm();
           }, 2000);
         } else {
@@ -330,7 +333,7 @@ const AddMemberPage = () => {
               
               <div className="bg-gradient-to-r from-orange-50 to-blue-50 rounded-xl p-4 mb-6">
                 <p className="text-sm text-slate-600 mb-1">Member ID</p>
-                <p className="text-lg font-bold text-slate-900">#GF{String(Date.now()).slice(-6)}</p>
+                <p className="text-lg font-bold text-slate-900">#GF{memberId}</p>
               </div>
             </div>
           </div>
