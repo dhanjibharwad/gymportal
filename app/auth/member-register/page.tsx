@@ -55,6 +55,7 @@ interface FormErrors {
 const GymMemberRegistrationPage = () => {
   const today = new Date().toISOString().split('T')[0];
   const [showSuccess, setShowSuccess] = useState(false);
+  const [toast, setToast] = useState<{show: boolean, message: string, type: 'success' | 'error'}>({show: false, message: '', type: 'success'});
   
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -84,7 +85,42 @@ const GymMemberRegistrationPage = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [photoPreview, setPhotoPreview] = useState<string>('');
 
-  // Plan pricing map
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      fullName: '',
+      phoneNumber: '',
+      email: '',
+      gender: '',
+      dateOfBirth: '',
+      address: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      profilePhoto: null,
+      selectedPlan: '',
+      planStartDate: today,
+      trainerAssigned: '',
+      batchTime: '',
+      membershipType: '',
+      lockerRequired: false,
+      medicalConditions: '',
+      injuriesLimitations: '',
+      additionalNotes: '',
+      totalPlanFee: 0,
+      amountPaidNow: 0,
+      paymentMode: '',
+      nextDueDate: ''
+    });
+    setErrors({});
+    setPhotoPreview('');
+  };
+  
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({show: true, message, type});
+    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 3000);
+  };
+  
   const planPricing: { [key: string]: number } = {
     'Monthly': 1500,
     '3 Months': 4000,
@@ -182,10 +218,14 @@ const GymMemberRegistrationPage = () => {
         // Create FormData for file upload support
         const formDataToSend = new FormData();
         
-        // Add all form fields except profilePhoto
+        // Add all form fields with proper type conversion
         Object.entries(formData).forEach(([key, value]) => {
           if (key !== 'profilePhoto') {
-            formDataToSend.append(key, value?.toString() || '');
+            if (typeof value === 'boolean') {
+              formDataToSend.append(key, value.toString());
+            } else {
+              formDataToSend.append(key, value?.toString() || '');
+            }
           }
         });
         
@@ -203,8 +243,10 @@ const GymMemberRegistrationPage = () => {
 
         if (result.success) {
           setShowSuccess(true);
-          setTimeout(() => setShowSuccess(false), 2000);
-          // Optional: Reset form or redirect
+          setTimeout(() => {
+            setShowSuccess(false);
+            resetForm(); // Reset form after success popup closes
+          }, 2000);
         } else {
           // Handle specific error messages
           if (result.message.includes('phone_number')) {
@@ -212,12 +254,12 @@ const GymMemberRegistrationPage = () => {
           } else if (result.message.includes('email')) {
             setErrors({ email: 'Email already exists' });
           } else {
-            alert('Registration failed: ' + result.message);
+            showToast(result.message, 'error');
           }
         }
       } catch (error) {
         console.error('Registration error:', error);
-        alert('Registration failed. Please try again.');
+        showToast('Registration failed. Please try again.', 'error');
       }
     } else {
       // Scroll to first error
@@ -230,6 +272,45 @@ const GymMemberRegistrationPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 pt-20">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-24 right-6 z-50 max-w-sm w-full transform transition-all duration-300 ${
+          toast.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        }`}>
+          <div className={`rounded-xl p-4 shadow-lg border-l-4 ${
+            toast.type === 'success' 
+              ? 'bg-green-50 border-green-500 text-green-800' 
+              : 'bg-red-50 border-red-500 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                {toast.type === 'success' ? (
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{toast.message}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setToast({show: false, message: '', type: 'success'})}
+                  className="inline-flex text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Success Popup */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -861,7 +942,7 @@ const GymMemberRegistrationPage = () => {
               type="submit"
               className="group relative px-8 sm:px-12 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-lg rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 transition-all duration-300 overflow-hidden"
             >
-              <span className="relative z-10 flex items-center gap-2">
+              <span className="relative z-10 flex items-center gap-2 cursor-pointer">
                 <FileText className="w-5 h-5" />
                 Create Member
               </span>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { writeFile } from 'fs/promises';
+import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
       amountPaidNow: parseFloat(formData.get('amountPaidNow') as string) || 0,
       paymentMode: formData.get('paymentMode') as string,
       nextDueDate: formData.get('nextDueDate') as string || null,
+      profilePhoto: formData.get('profilePhoto') as File || null,
     };
     
     const client = await pool.connect();
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
     try {
       await client.query('BEGIN');
       
-      // Insert member
+      // Insert member first
       const memberResult = await client.query(
         `INSERT INTO members (
           full_name, phone_number, email, gender, date_of_birth, 
@@ -54,6 +57,23 @@ export async function POST(request: NextRequest) {
       );
       
       const memberId = memberResult.rows[0].id;
+      
+      // Handle profile photo upload after getting memberId
+      if (data.profilePhoto && data.profilePhoto.size > 0) {
+        const bytes = await data.profilePhoto.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        const fileName = `${memberId}_${data.profilePhoto.name}`;
+        const filePath = path.join(process.cwd(), 'public/uploads/members', fileName);
+        
+        await writeFile(filePath, buffer);
+        
+        const profilePhotoUrl = `/uploads/members/${fileName}`;
+        await client.query(
+          'UPDATE members SET profile_photo_url = $1 WHERE id = $2',
+          [profilePhotoUrl, memberId]
+        );
+      }
       
       // Get plan ID
       const planResult = await client.query(
