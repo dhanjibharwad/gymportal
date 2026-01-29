@@ -1,11 +1,9 @@
+'use client';
+
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-
-export const metadata = {
-  title: "GymPortal",
-  description: "Smart gym management system",
-};
+import { usePathname } from 'next/navigation';
 
 export default function RootLayout({
   children,
@@ -14,11 +12,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-white">
-        <Navbar />
-        {children}
-        <Footer />
+      <head>
+        <title>GymPortal</title>
+        <meta name="description" content="Smart gym management system" />
+      </head>
+      <body>
+        <LayoutContent>{children}</LayoutContent>
       </body>
     </html>
+  );
+}
+
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isReceptionRoute = pathname?.startsWith('/reception');
+  
+  if (isReceptionRoute) {
+    return <div className="bg-gray-50">{children}</div>;
+  }
+
+  return (
+    <div className="bg-gray-950 text-white">
+      <Navbar />
+      {children}
+      <Footer />
+    </div>
   );
 }
