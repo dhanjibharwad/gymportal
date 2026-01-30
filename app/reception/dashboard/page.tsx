@@ -26,7 +26,7 @@ interface Member {
 
 interface Payment {
   id: number;
-  paid_amount: number;
+  paid_amount: number | string;
   payment_status: string;
   created_at: string;
 }
@@ -104,21 +104,30 @@ const Dashboard = () => {
         const todayRevenue = payments
           .filter((p: Payment) => new Date(p.created_at).toISOString().split('T')[0] === today)
           .reduce((sum: number, p: Payment) => {
-            const amount = parseFloat(p.paid_amount.toString()) || 0;
+            const amount = typeof p.paid_amount === 'number' ? p.paid_amount : parseFloat(String(p.paid_amount)) || 0;
             return sum + amount;
           }, 0);
           
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
+        console.log('Current month/year:', currentMonth, currentYear);
+        
         const monthlyRevenue = payments
           .filter((p: Payment) => {
             const paymentDate = new Date(p.created_at);
-            return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+            const isCurrentMonth = paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+            if (isCurrentMonth) {
+              console.log('Monthly payment found:', p.paid_amount, paymentDate);
+            }
+            return isCurrentMonth;
           })
           .reduce((sum: number, p: Payment) => {
-            const amount = parseFloat(p.paid_amount.toString()) || 0;
+            const amount = typeof p.paid_amount === 'number' ? p.paid_amount : parseFloat(String(p.paid_amount)) || 0;
+            console.log('Adding to monthly total:', amount, 'current sum:', sum);
             return sum + amount;
           }, 0);
+          
+        console.log('Final monthly revenue:', monthlyRevenue);
         
         // Pending payments
         const pendingPayments = payments.filter((p: Payment) => 
@@ -318,7 +327,7 @@ const Dashboard = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Monthly Revenue</p>
-              <p className="text-xl font-bold text-gray-900">₹{(dashboardData.monthlyRevenue / 1000).toFixed(0)}K</p>
+              <p className="text-xl font-bold text-gray-900">₹{Math.round(dashboardData.monthlyRevenue).toLocaleString()}</p>
             </div>
           </div>
         </div>

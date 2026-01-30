@@ -31,9 +31,23 @@ export async function GET(request: NextRequest) {
         ORDER BY p.created_at DESC
       `);
       
+      // Convert numeric fields to numbers
+      const paymentsWithNumbers = result.rows.map(payment => ({
+        ...payment,
+        total_amount: parseFloat(payment.total_amount) || 0,
+        paid_amount: parseFloat(payment.paid_amount) || 0
+      }));
+      
+      console.log('Payments query result:', result.rows.length, 'rows');
+      if (result.rows.length > 0) {
+        console.log('Sample payment:', paymentsWithNumbers[0]);
+        const totalRevenue = paymentsWithNumbers.reduce((sum, payment) => sum + payment.paid_amount, 0);
+        console.log('Total revenue calculated:', totalRevenue);
+      }
+      
       return NextResponse.json({
         success: true,
-        payments: result.rows
+        payments: paymentsWithNumbers
       });
       
     } finally {
@@ -43,7 +57,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Fetch payments error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch payments' },
+      { success: false, message: 'Failed to fetch payments', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

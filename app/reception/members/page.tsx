@@ -58,11 +58,17 @@ const MembersPage = () => {
 
   const fetchMembers = async () => {
     try {
+      console.log('Fetching members...');
       const response = await fetch('/api/members');
+      console.log('Response status:', response.status);
       const result = await response.json();
+      console.log('API result:', result);
       
       if (result.success) {
         setMembers(result.members);
+        console.log('Members set:', result.members.length);
+      } else {
+        console.error('API returned error:', result.message);
       }
     } catch (error) {
       console.error('Error fetching members:', error);
@@ -83,6 +89,8 @@ const MembersPage = () => {
   });
 
   const getStatusBadge = (status: string) => {
+    if (!status) status = 'inactive';
+    
     const statusConfig = {
       active: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
       inactive: { bg: 'bg-gray-100', text: 'text-gray-700', icon: XCircle },
@@ -102,6 +110,8 @@ const MembersPage = () => {
   };
 
   const getPaymentBadge = (status: string) => {
+    if (!status) status = 'pending';
+    
     const paymentConfig = {
       full: { bg: 'bg-green-100', text: 'text-green-700' },
       partial: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
