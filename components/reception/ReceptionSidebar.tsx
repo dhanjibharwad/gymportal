@@ -21,6 +21,7 @@ const navItems = [
   { label: "Add Members", href: "/reception/add-members", icon: UserPlus },
   { label: "Payments", href: "/reception/payments", icon: CreditCard },
 //   { label: "Expiry / Renewals", href: "/reception/renewals", icon: Calendar },
+  { label: "Payments History", href: "/reception/history", icon: Calendar },
 //   { label: "Profile", href: "/reception/profile", icon: User }
 ];
 
