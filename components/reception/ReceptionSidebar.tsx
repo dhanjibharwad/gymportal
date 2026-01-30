@@ -22,7 +22,9 @@ const navItems = [
   { label: "Payments", href: "/reception/payments", icon: CreditCard },
 //   { label: "Expiry / Renewals", href: "/reception/renewals", icon: Calendar },
   { label: "Payments History", href: "/reception/history", icon: Calendar },
-//   { label: "Profile", href: "/reception/profile", icon: User }
+  // { label: "Membership Plans", href: "/reception/membership-plans", icon: User }
+  { label: "Full Payments", href: "/reception/fullpayment", icon: User },
+  { label: "Expired Membership", href: "/reception/expired", icon: User }
 ];
 
 export default function ReceptionSidebar() {
