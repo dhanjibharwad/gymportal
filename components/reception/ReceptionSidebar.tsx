@@ -143,7 +143,7 @@ export default function ReceptionSidebar() {
       }`}>
         {!isCollapsed ? (
           <div className="text-xs text-gray-500">
-            GYM FLEX © 2024
+            GYM FLEX © 2026
           </div>
         ) : (
           <div className="text-xs text-gray-500 font-semibold">
