@@ -6,7 +6,7 @@ import {
   Search,
   Filter,
   Plus,
-  DollarSign,
+  IndianRupee,
   Calendar,
   User,
   Phone,
@@ -408,7 +408,7 @@ const PaymentsPage = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <DollarSign className="h-8 w-8 text-green-600" />
+              <IndianRupee  className="h-8 w-8 text-green-600" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>

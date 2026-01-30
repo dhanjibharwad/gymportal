@@ -11,7 +11,7 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
-  DollarSign,
+  IndianRupee,
   Target
 } from 'lucide-react';
 
@@ -259,7 +259,7 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-orange-600" />
+              <IndianRupee  className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
