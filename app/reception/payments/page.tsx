@@ -42,18 +42,17 @@ interface Payment {
 
 interface PaymentTransaction {
   id: number;
+  member_id: number;
   membership_id: number;
+  transaction_type: string;
   amount: number;
   payment_mode: string;
-  payment_date: string;
-  reference_number: string;
+  transaction_date: string;
+  receipt_number: string;
   created_at: string;
-  member_id: number;
   full_name: string;
   phone_number: string;
   profile_photo_url: string;
-  start_date: string;
-  end_date: string;
   plan_name: string;
   total_amount: number;
   paid_amount: number;
@@ -63,8 +62,11 @@ interface PaymentTransaction {
 const PaymentsPage = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<PaymentTransaction[]>([]);
+  const [memberTransactions, setMemberTransactions] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'summary' | 'history'>('summary');
+  const [selectedMemberForTimeline, setSelectedMemberForTimeline] = useState<Payment | null>(null);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentModeFilter, setPaymentModeFilter] = useState('all');
@@ -78,7 +80,6 @@ const PaymentsPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
-
 
   useEffect(() => {
     fetchPayments();
@@ -153,7 +154,6 @@ const PaymentsPage = () => {
       const result = await response.json();
       
       if (result.success) {
-        // Update the local state immediately for better UX
         setPayments(prevPayments => 
           prevPayments.map(p => 
             p.membership_id === selectedPayment.membership_id 
@@ -168,7 +168,6 @@ const PaymentsPage = () => {
           )
         );
         
-        // Also fetch fresh data from server
         await fetchPayments();
         await fetchPaymentHistory();
         closePaymentModal();
@@ -184,6 +183,39 @@ const PaymentsPage = () => {
     }
   };
 
+  const fetchMemberTransactions = async (membershipId: number) => {
+    try {
+      const response = await fetch(`/api/payments/member-timeline?membership_id=${membershipId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch member transactions');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setMemberTransactions(result.transactions);
+      } else {
+        setNotification({type: 'error', message: 'Failed to load member timeline'});
+      }
+    } catch (error) {
+      console.error('Error fetching member transactions:', error);
+      setNotification({type: 'error', message: 'Unable to load member timeline.'});
+    }
+  };
+
+  const handleViewTimeline = async (payment: Payment) => {
+    setSelectedMemberForTimeline(payment);
+    await fetchMemberTransactions(payment.membership_id);
+    setShowTimelineModal(true);
+  };
+
+  const closeTimelineModal = () => {
+    setShowTimelineModal(false);
+    setSelectedMemberForTimeline(null);
+    setMemberTransactions([]);
+  };
+
   const closePaymentModal = () => {
     setShowPaymentModal(false);
     setSelectedPayment(null);
@@ -195,7 +227,19 @@ const PaymentsPage = () => {
     });
   };
 
-
+  const getTransactionTypeIcon = (type: string) => {
+    const typeConfig = {
+      membership_fee: { icon: CreditCard, color: 'text-blue-600', label: 'Membership Fee' },
+      additional_payment: { icon: Plus, color: 'text-green-600', label: 'Additional Payment' },
+      renewal: { icon: Calendar, color: 'text-purple-600', label: 'Renewal' },
+      refund: { icon: AlertTriangle, color: 'text-red-600', label: 'Refund' }
+    };
+    
+    const config = typeConfig[type as keyof typeof typeConfig] || typeConfig.additional_payment;
+    const Icon = config.icon;
+    
+    return { icon: <Icon className={`w-4 h-4 ${config.color}`} />, label: config.label, color: config.color };
+  };
 
   const fetchPaymentHistory = async () => {
     try {
@@ -302,18 +346,10 @@ const PaymentsPage = () => {
     return new Date(dueDate) < new Date();
   };
 
-  // Calculate summary statistics
-  const totalRevenue = payments.reduce((sum, payment) => {
-    const amount = parseFloat(payment.paid_amount.toString()) || 0;
-    return sum + amount;
-  }, 0);
+  const totalRevenue = payments.reduce((sum, payment) => sum + payment.paid_amount, 0);
   const pendingAmount = payments
     .filter(p => p.payment_status === 'pending' || p.payment_status === 'partial')
-    .reduce((sum, payment) => {
-      const total = parseFloat(payment.total_amount.toString()) || 0;
-      const paid = parseFloat(payment.paid_amount.toString()) || 0;
-      return sum + (total - paid);
-    }, 0);
+    .reduce((sum, payment) => sum + (payment.total_amount - payment.paid_amount), 0);
   const fullPayments = payments.filter(p => p.payment_status === 'full').length;
   const overduePayments = payments.filter(p => p.payment_status !== 'full' && isOverdue(p.next_due_date)).length;
 
@@ -327,7 +363,6 @@ const PaymentsPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Notification */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
           notification.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
@@ -338,7 +373,7 @@ const PaymentsPage = () => {
           </div>
         </div>
       )}
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
@@ -369,7 +404,6 @@ const PaymentsPage = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
@@ -378,12 +412,8 @@ const PaymentsPage = () => {
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">
-                  Total Revenue
-                </dt>
-                <dd className="text-lg font-medium text-gray-900">
-                  ₹{Math.round(totalRevenue).toLocaleString()}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                <dd className="text-lg font-medium text-gray-900">₹{Math.round(totalRevenue).toLocaleString()}</dd>
               </dl>
             </div>
           </div>
@@ -396,12 +426,8 @@ const PaymentsPage = () => {
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">
-                  Pending Amount
-                </dt>
-                <dd className="text-lg font-medium text-gray-900">
-                  ₹{Math.round(pendingAmount).toLocaleString()}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500 truncate">Pending Amount</dt>
+                <dd className="text-lg font-medium text-gray-900">₹{Math.round(pendingAmount).toLocaleString()}</dd>
               </dl>
             </div>
           </div>
@@ -414,12 +440,8 @@ const PaymentsPage = () => {
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">
-                  Paid Full
-                </dt>
-                <dd className="text-lg font-medium text-gray-900">
-                  {fullPayments}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500 truncate">Paid Full</dt>
+                <dd className="text-lg font-medium text-gray-900">{fullPayments}</dd>
               </dl>
             </div>
           </div>
@@ -432,22 +454,16 @@ const PaymentsPage = () => {
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">
-                  Overdue
-                </dt>
-                <dd className="text-lg font-medium text-gray-900">
-                  {overduePayments}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500 truncate">Overdue</dt>
+                <dd className="text-lg font-medium text-gray-900">{overduePayments}</dd>
               </dl>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -459,7 +475,6 @@ const PaymentsPage = () => {
             />
           </div>
 
-          {/* Status Filter */}
           <div>
             <select
               value={statusFilter}
@@ -474,7 +489,6 @@ const PaymentsPage = () => {
             </select>
           </div>
 
-          {/* Payment Mode Filter */}
           <div>
             <select
               value={paymentModeFilter}
@@ -491,122 +505,68 @@ const PaymentsPage = () => {
         </div>
       </div>
 
-      {/* Payments Table or History Cards */}
       {viewMode === 'summary' ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Member
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Plan
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment Mode
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Mode</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPayments.map((payment) => (
                   <tr key={payment.id} className="hover:bg-gray-50">
-                    {/* Member Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {payment.profile_photo_url ? (
-                            <img
-                              className="h-10 w-10 rounded-full object-cover"
-                              src={payment.profile_photo_url}
-                              alt={payment.full_name}
-                            />
+                            <img className="h-10 w-10 rounded-full object-cover" src={payment.profile_photo_url} alt={payment.full_name} />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-                              <span className="text-sm font-medium text-white">
-                                {payment.full_name.charAt(0)}
-                              </span>
+                              <span className="text-sm font-medium text-white">{payment.full_name.charAt(0)}</span>
                             </div>
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {payment.full_name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {payment.phone_number}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{payment.full_name}</div>
+                          <div className="text-sm text-gray-500">{payment.phone_number}</div>
                         </div>
                       </div>
                     </td>
-
-                    {/* Plan */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {payment.plan_name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {formatDate(payment.start_date)} - {formatDate(payment.end_date)}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{payment.plan_name}</div>
+                      <div className="text-sm text-gray-500">{formatDate(payment.start_date)} - {formatDate(payment.end_date)}</div>
                     </td>
-
-                    {/* Amount */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(payment.paid_amount)} / {formatCurrency(payment.total_amount)}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{formatCurrency(payment.paid_amount)} / {formatCurrency(payment.total_amount)}</div>
                       {payment.payment_status !== 'full' && (
-                        <div className="text-sm text-red-600">
-                          Pending: {formatCurrency(payment.total_amount - payment.paid_amount)}
-                        </div>
+                        <div className="text-sm text-red-600">Pending: {formatCurrency(payment.total_amount - payment.paid_amount)}</div>
                       )}
                     </td>
-
-                    {/* Payment Mode */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {getPaymentModeIcon(payment.payment_mode)}
-                        <span className="ml-2 text-sm text-gray-900">
-                          {payment.payment_mode}
-                        </span>
+                        <span className="ml-2 text-sm text-gray-900">{payment.payment_mode}</span>
                       </div>
                     </td>
-
-                    {/* Status */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(payment.payment_status)}
-                    </td>
-
-                    {/* Due Date */}
+                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(payment.payment_status)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {payment.next_due_date ? (
-                        <div className={`text-sm ${
-                          isOverdue(payment.next_due_date) ? 'text-red-600 font-medium' : 'text-gray-900'
-                        }`}>
+                        <div className={`text-sm ${isOverdue(payment.next_due_date) ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
                           {formatDate(payment.next_due_date)}
-                          {isOverdue(payment.next_due_date) && (
-                            <div className="text-xs text-red-500">Overdue</div>
-                          )}
+                          {isOverdue(payment.next_due_date) && <div className="text-xs text-red-500">Overdue</div>}
                         </div>
                       ) : (
                         <span className="text-sm text-gray-500">N/A</span>
                       )}
                     </td>
-
-                    {/* Actions */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button 
@@ -616,6 +576,14 @@ const PaymentsPage = () => {
                         >
                           <Plus className="w-3 h-3" />
                           Payment
+                        </button>
+                        <button 
+                          onClick={() => handleViewTimeline(payment)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center gap-1 text-xs font-medium transition-colors"
+                          title="View Timeline"
+                        >
+                          <Clock className="w-3 h-3" />
+                          Timeline
                         </button>
                       </div>
                     </td>
@@ -641,20 +609,13 @@ const PaymentsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {paymentHistory.map((transaction) => (
             <div key={transaction.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              {/* Member Info */}
               <div className="flex items-center space-x-3 mb-4">
                 <div className="flex-shrink-0">
                   {transaction.profile_photo_url ? (
-                    <img
-                      className="h-10 w-10 rounded-full object-cover"
-                      src={transaction.profile_photo_url}
-                      alt={transaction.full_name}
-                    />
+                    <img className="h-10 w-10 rounded-full object-cover" src={transaction.profile_photo_url} alt={transaction.full_name} />
                   ) : (
                     <div className="h-10 w-10 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-                      <span className="text-sm font-medium text-white">
-                        {transaction.full_name.charAt(0)}
-                      </span>
+                      <span className="text-sm font-medium text-white">{transaction.full_name.charAt(0)}</span>
                     </div>
                   )}
                 </div>
@@ -664,7 +625,6 @@ const PaymentsPage = () => {
                 </div>
               </div>
 
-              {/* Payment Details */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Amount Paid:</span>
@@ -681,13 +641,13 @@ const PaymentsPage = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Payment Date:</span>
-                  <span className="text-sm font-medium">{formatDate(transaction.payment_date)}</span>
+                  <span className="text-sm font-medium">{formatDate(transaction.transaction_date)}</span>
                 </div>
                 
-                {transaction.reference_number && (
+                {transaction.receipt_number && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Reference:</span>
-                    <span className="text-sm font-mono text-gray-800">{transaction.reference_number}</span>
+                    <span className="text-sm font-mono text-gray-800">{transaction.receipt_number}</span>
                   </div>
                 )}
                 
@@ -731,37 +691,25 @@ const PaymentsPage = () => {
         </div>
       )}
 
-
-      {/* Add Payment Modal */}
       {showPaymentModal && selectedPayment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Add Payment</h3>
-              <button
-                onClick={closePaymentModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
+              <button onClick={closePaymentModal} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
             <div className="p-6 space-y-6">
-              {/* Member Info */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     {selectedPayment.profile_photo_url ? (
-                      <img
-                        className="h-12 w-12 rounded-full object-cover"
-                        src={selectedPayment.profile_photo_url}
-                        alt={selectedPayment.full_name}
-                      />
+                      <img className="h-12 w-12 rounded-full object-cover" src={selectedPayment.profile_photo_url} alt={selectedPayment.full_name} />
                     ) : (
                       <div className="h-12 w-12 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-                        <span className="text-lg font-medium text-white">
-                          {selectedPayment.full_name.charAt(0)}
-                        </span>
+                        <span className="text-lg font-medium text-white">{selectedPayment.full_name.charAt(0)}</span>
                       </div>
                     )}
                   </div>
@@ -773,7 +721,6 @@ const PaymentsPage = () => {
                 </div>
               </div>
 
-              {/* Previous Payment Details */}
               <div className="border border-gray-200 rounded-lg p-4">
                 <h5 className="text-sm font-medium text-gray-900 mb-3">Previous Payment</h5>
                 <div className="space-y-2 text-sm">
@@ -800,15 +747,12 @@ const PaymentsPage = () => {
                 </div>
               </div>
 
-              {/* New Payment Form */}
               <div className="border-t border-gray-200 pt-4">
                 <h5 className="text-sm font-medium text-gray-900 mb-4">Add New Payment</h5>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Payment Amount *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Amount *</label>
                     <input
                       type="number"
                       value={newPayment.amount}
@@ -824,9 +768,7 @@ const PaymentsPage = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Payment Mode *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
                     <select
                       value={newPayment.payment_mode}
                       onChange={(e) => setNewPayment({...newPayment, payment_mode: e.target.value})}
@@ -841,9 +783,7 @@ const PaymentsPage = () => {
                   
                   {(newPayment.payment_mode === 'UPI' || newPayment.payment_mode === 'Online') && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Reference Number
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
                       <input
                         type="text"
                         value={newPayment.reference_number}
@@ -855,9 +795,7 @@ const PaymentsPage = () => {
                   )}
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Payment Date *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
                     <input
                       type="date"
                       value={newPayment.payment_date}
@@ -894,6 +832,57 @@ const PaymentsPage = () => {
         </div>
       )}
 
+      {showTimelineModal && selectedMemberForTimeline && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Payment Timeline - {selectedMemberForTimeline.full_name}</h3>
+              <button onClick={closeTimelineModal} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {memberTransactions.map((transaction) => {
+                  const typeInfo = getTransactionTypeIcon(transaction.transaction_type);
+                  return (
+                    <div key={transaction.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0 mt-1">{typeInfo.icon}</div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-900">{typeInfo.label}</h4>
+                            <p className="text-xs text-gray-500">{formatDate(transaction.transaction_date)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-semibold text-green-600">{formatCurrency(transaction.amount)}</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-600">
+                              {getPaymentModeIcon(transaction.payment_mode)}
+                              <span>{transaction.payment_mode}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {transaction.receipt_number && (
+                          <p className="text-xs text-gray-500 mt-1">Ref: {transaction.receipt_number}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {memberTransactions.length === 0 && (
+                  <div className="text-center py-8">
+                    <Receipt className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No transactions found</h3>
+                    <p className="mt-1 text-sm text-gray-500">No payment history available for this member.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

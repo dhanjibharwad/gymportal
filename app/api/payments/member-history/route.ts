@@ -3,6 +3,16 @@ import pool from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get('member_id');
+    
+    if (!memberId) {
+      return NextResponse.json(
+        { success: false, message: 'Member ID is required' },
+        { status: 400 }
+      );
+    }
+
     const client = await pool.connect();
     
     try {
@@ -29,8 +39,9 @@ export async function GET(request: NextRequest) {
         JOIN members m ON pt.member_id = m.id
         JOIN membership_plans mp ON ms.plan_id = mp.id
         JOIN payments p ON pt.membership_id = p.membership_id
+        WHERE pt.member_id = $1
         ORDER BY pt.transaction_date DESC, pt.created_at DESC
-      `);
+      `, [memberId]);
       
       return NextResponse.json({
         success: true,
@@ -42,9 +53,9 @@ export async function GET(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('Fetch payment history error:', error);
+    console.error('Fetch member history error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch payment history' },
+      { success: false, message: 'Failed to fetch member history' },
       { status: 500 }
     );
   }
