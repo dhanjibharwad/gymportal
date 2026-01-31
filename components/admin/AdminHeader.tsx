@@ -3,7 +3,7 @@
 import { ChevronDown, User, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
-export default function ReceptionHeader() {
+export default function AdminHeader() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +33,7 @@ export default function ReceptionHeader() {
       {/* Left side - Gym name */}
       <div className="flex items-center">
         <h1 className="text-xl font-bold text-orange-600">EAGLE GYM</h1>
-        <span className="ml-2 text-sm text-gray-500">Reception Portal</span>
+        <span className="ml-2 text-sm text-gray-500">Admin Portal</span>
       </div>
 
       {/* Right side - Profile dropdown */}
@@ -43,12 +43,12 @@ export default function ReceptionHeader() {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              R
+            <div className="w-8 h-8 bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              A
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-700">Reception</span>
-              <span className="text-xs text-gray-500">Staff</span>
+              <span className="text-sm font-medium text-gray-700">Admin</span>
+              {/* <span className="text-xs text-gray-500">Staff</span> */}
             </div>
             <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
           </button>

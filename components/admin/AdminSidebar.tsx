@@ -16,18 +16,18 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { label: "Dashboard", href: "/reception/dashboard", icon: LayoutDashboard },
-  { label: "Members", href: "/reception/members", icon: Users },
-  { label: "Add Members", href: "/reception/add-members", icon: UserPlus },
-  { label: "Payments", href: "/reception/payments", icon: CreditCard },
-//   { label: "Expiry / Renewals", href: "/reception/renewals", icon: Calendar },
-  { label: "Payments History", href: "/reception/history", icon: Calendar },
-  // { label: "Membership Plans", href: "/reception/membership-plans", icon: User }
-  { label: "Full Payments", href: "/reception/fullpayment", icon: User },
-  { label: "Expired Membership", href: "/reception/expired", icon: User }
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Members", href: "/admin/members", icon: Users },
+  { label: "Add Members", href: "/admin/add-members", icon: UserPlus },
+  { label: "Payments", href: "/admin/payments", icon: CreditCard },
+//   { label: "Expiry / Renewals", href: "/admin/renewals", icon: Calendar },
+  { label: "Payments History", href: "/admin/history", icon: Calendar },
+  // { label: "Membership Plans", href: "/admin/membership-plans", icon: User }
+  { label: "Full Payments", href: "/admin/fullpayment", icon: User },
+  { label: "Expired Membership", href: "/admin/expired", icon: User }
 ];
 
-export default function ReceptionSidebar() {
+export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
@@ -62,7 +62,7 @@ export default function ReceptionSidebar() {
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className={`absolute top-6 bg-white shadow-md rounded-full p-2 border border-gray-200 hover:bg-gray-100 hover:shadow-lg transition-all duration-200 z-20 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:ring-opacity-50 ${
+        className={`absolute top-6 bg-white shadow-md rounded-full p-2 border border-gray-200 hover:bg-gray-100 hover:shadow-lg transition-all duration-200 z-20 focus:outline-none focus:ring-1 focus:ring-gray-500 focus:ring-opacity-50 ${
           isCollapsed ? 'left-1/2 transform -translate-x-1/2' : 'right-2'
         }`}
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -78,7 +78,7 @@ export default function ReceptionSidebar() {
       {!isCollapsed && (
         <div className="border-b border-gray-100 flex justify-center items-center p-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
               <Dumbbell className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-orange-600">EAGLE GYM</span>
@@ -107,8 +107,8 @@ export default function ReceptionSidebar() {
                       href={item.href}
                       className={`flex items-center font-medium transition-all duration-200 group relative ${
                         isActive
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
-                          : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                          ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-600'
                       } ${
                         isCollapsed 
                           ? 'w-12 h-12 mx-2 justify-center rounded-lg' 
@@ -126,7 +126,7 @@ export default function ReceptionSidebar() {
 
                       {/* Tooltip for collapsed state */}
                       {isCollapsed && (
-                        <span className="absolute left-full ml-2 px-2 py-1.5 bg-orange-600 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
+                        <span className="absolute left-full ml-2 px-2 py-1.5 bg-gray-600 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                           {item.label}
                         </span>
                       )}

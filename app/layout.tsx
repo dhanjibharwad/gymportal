@@ -26,8 +26,9 @@ export default function RootLayout({
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isReceptionRoute = pathname?.startsWith('/reception');
+  const isAdminRoute = pathname?.startsWith('/admin');
   
-  if (isReceptionRoute) {
+  if (isReceptionRoute || isAdminRoute) {
     return <div className="bg-gray-50">{children}</div>;
   }
 

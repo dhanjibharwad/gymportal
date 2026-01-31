@@ -81,10 +81,10 @@ const HeroSection = () => {
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <button className="group min-w-[200px] px-8 py-4 rounded-xl border border-white/20 text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition">
+            {/* <button className="group min-w-[200px] px-8 py-4 rounded-xl border border-white/20 text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition">
               <Play className="w-5 h-5" />
               Explore Programs
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

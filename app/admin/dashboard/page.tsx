@@ -22,7 +22,6 @@ interface Member {
   created_at: string;
   end_date: string;
   plan_name: string;
-  profile_photo_url: string;
 }
 
 interface Payment {
@@ -38,7 +37,6 @@ interface RecentMember {
   plan: string;
   joinDate: string;
   status: string;
-  profile_photo_url: string;
 }
 
 interface ExpiringMember {
@@ -47,7 +45,6 @@ interface ExpiringMember {
   plan: string;
   expiryDate: string;
   daysLeft: number;
-  profile_photo_url: string;
 }
 
 const Dashboard = () => {
@@ -59,6 +56,7 @@ const Dashboard = () => {
     expiringThisWeek: 0,
     todayRevenue: 0,
     monthlyRevenue: 0,
+    totalRevenue: 0,
     pendingPayments: 0,
     recentMembers: [] as RecentMember[],
     expiringMembers: [] as ExpiringMember[]
@@ -132,6 +130,13 @@ const Dashboard = () => {
           
         console.log('Final monthly revenue:', monthlyRevenue);
         
+        // Total revenue (all time)
+        const totalRevenue = payments
+          .reduce((sum: number, p: Payment) => {
+            const amount = typeof p.paid_amount === 'number' ? p.paid_amount : parseFloat(String(p.paid_amount)) || 0;
+            return sum + amount;
+          }, 0);
+        
         // Pending payments
         const pendingPayments = payments.filter((p: Payment) => 
           p.payment_status === 'pending' || p.payment_status === 'partial'
@@ -146,8 +151,7 @@ const Dashboard = () => {
             name: m.full_name,
             plan: m.plan_name,
             joinDate: new Date(m.created_at).toLocaleDateString('en-IN'),
-            status: m.membership_status === 'active' ? 'Active' : 'Inactive',
-            profile_photo_url: m.profile_photo_url
+            status: m.membership_status === 'active' ? 'Active' : 'Inactive'
           }));
         
         // Expiring members
@@ -171,8 +175,7 @@ const Dashboard = () => {
               name: m.full_name,
               plan: m.plan_name,
               expiryDate: new Date(m.end_date).toLocaleDateString('en-IN'),
-              daysLeft,
-              profile_photo_url: m.profile_photo_url
+              daysLeft
             };
           });
         
@@ -183,6 +186,7 @@ const Dashboard = () => {
           expiringThisWeek,
           todayRevenue,
           monthlyRevenue,
+          totalRevenue,
           pendingPayments,
           recentMembers,
           expiringMembers
@@ -206,133 +210,140 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reception Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening at your gym today.</p>
-        </div>
-        <div className="mt-4 sm:mt-0 text-sm text-gray-500">
-          {currentTime && `Last updated: ${currentTime}`}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-8 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-gray-300 mt-2">Welcome back! Here's what's happening at your gym today.</p>
+          </div>
+          <div className="mt-4 sm:mt-0 text-sm text-gray-400">
+            {currentTime && `Last updated: ${currentTime}`}
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Primary Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {/* Total Members */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Members</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardData.totalMembers.toLocaleString()}</p>
-              <p className="text-xs text-green-600 flex items-center mt-1">
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.totalMembers.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 flex items-center mt-2">
                 <TrendingUp className="w-3 h-3 mr-1" />
                 {dashboardData.totalMembers > 0 ? `${((dashboardData.activeMembers / dashboardData.totalMembers) * 100).toFixed(1)}% active` : 'No data'}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-14 h-14 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center shadow-lg">
+              <Users className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
         {/* Active Members */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Members</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardData.activeMembers.toLocaleString()}</p>
-              <p className="text-xs text-green-600 flex items-center mt-1">
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.activeMembers.toLocaleString()}</p>
+              <p className="text-xs text-green-600 flex items-center mt-2">
                 <CheckCircle className="w-3 h-3 mr-1" />
                 {dashboardData.totalMembers > 0 ? `${((dashboardData.activeMembers / dashboardData.totalMembers) * 100).toFixed(1)}% active rate` : '0% active rate'}
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Activity className="w-6 h-6 text-green-600" />
+            <div className="w-14 h-14 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center shadow-lg">
+              <Activity className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
         {/* Today's Revenue */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Today's Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">₹{Math.round(dashboardData.todayRevenue).toLocaleString()}</p>
-              <p className="text-xs text-green-600 flex items-center mt-1">
+              <p className="text-3xl font-bold text-gray-900">₹{Math.round(dashboardData.todayRevenue).toLocaleString()}</p>
+              <p className="text-xs text-gray-500 flex items-center mt-2">
                 <TrendingUp className="w-3 h-3 mr-1" />
                 Today's earnings
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <IndianRupee  className="w-6 h-6 text-orange-600" />
+            <div className="w-14 h-14 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-lg">
+              <IndianRupee className="w-7 h-7 text-white" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total Revenue */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-3xl font-bold text-gray-900">₹{Math.round(dashboardData.totalRevenue).toLocaleString()}</p>
+              <p className="text-xs text-gray-500 flex items-center mt-2">
+                <Target className="w-3 h-3 mr-1" />
+                All time earnings
+              </p>
+            </div>
+            <div className="w-14 h-14 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center shadow-lg">
+              <Target className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
         {/* Expiring Soon */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Expiring This Week</p>
-              <p className="text-2xl font-bold text-gray-900">{dashboardData.expiringThisWeek}</p>
-              <p className="text-xs text-amber-600 flex items-center mt-1">
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.expiringThisWeek}</p>
+              <p className="text-xs text-amber-600 flex items-center mt-2">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 Needs attention
               </p>
             </div>
-            <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-amber-600" />
+            <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Calendar className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-purple-600" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 hover:shadow-xl transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center shadow-md">
+              <UserPlus className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">New Today</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.newMembersToday}</p>
+              <p className="text-sm font-medium text-gray-600">New Today</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData.newMembersToday}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-red-600" />
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 hover:shadow-xl transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center shadow-md">
+              <CreditCard className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Pending Payments</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.pendingPayments}</p>
+              <p className="text-sm font-medium text-gray-600">Pending Payments</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData.pendingPayments}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 hover:shadow-xl transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center shadow-md">
+              <IndianRupee className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Checked In Today</p>
-              <p className="text-xl font-bold text-gray-900">0</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-teal-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Monthly Revenue</p>
-              <p className="text-xl font-bold text-gray-900">₹{Math.round(dashboardData.monthlyRevenue).toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">₹{Math.round(dashboardData.monthlyRevenue).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -341,11 +352,11 @@ const Dashboard = () => {
       {/* Tables Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Members */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Recent Members</h3>
-              <button className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+              <button className="text-sm text-gray-600 hover:text-gray-800 font-medium transition-colors">
                 View All
               </button>
             </div>
@@ -355,17 +366,9 @@ const Dashboard = () => {
               {dashboardData.recentMembers.length > 0 ? dashboardData.recentMembers.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    {member.profile_photo_url ? (
-                      <img
-                        className="w-10 h-10 rounded-full object-cover"
-                        src={member.profile_photo_url}
-                        alt={member.name}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        {member.name.charAt(0)}
-                      </div>
-                    )}
+                    <div className="w-10 h-10 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {member.name.charAt(0)}
+                    </div>
                     <div>
                       <p className="font-medium text-gray-900">{member.name}</p>
                       <p className="text-sm text-gray-600">{member.plan} • {member.joinDate}</p>
@@ -389,11 +392,11 @@ const Dashboard = () => {
         </div>
 
         {/* Expiring Members */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Expiring Soon</h3>
-              <button className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+              <button className="text-sm text-gray-600 hover:text-gray-800 font-medium transition-colors">
                 View All
               </button>
             </div>
@@ -401,19 +404,11 @@ const Dashboard = () => {
           <div className="p-6">
             <div className="space-y-4">
               {dashboardData.expiringMembers.length > 0 ? dashboardData.expiringMembers.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
-                    {member.profile_photo_url ? (
-                      <img
-                        className="w-10 h-10 rounded-full object-cover"
-                        src={member.profile_photo_url}
-                        alt={member.name}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        {member.name.charAt(0)}
-                      </div>
-                    )}
+                    <div className="w-10 h-10 bg-gradient-to-r from-gray-700 to-gray-800 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {member.name.charAt(0)}
+                    </div>
                     <div>
                       <p className="font-medium text-gray-900">{member.name}</p>
                       <p className="text-sm text-gray-600">{member.plan} • Expires {member.expiryDate}</p>
