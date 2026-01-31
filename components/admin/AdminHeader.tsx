@@ -20,10 +20,15 @@ export default function AdminHeader() {
 
   const handleLogout = async () => {
     try {
-      // Add your logout logic here
-      window.location.href = '/auth/login';
+      // Call logout API to clear session cookie
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      // Always redirect to login
       window.location.href = '/auth/login';
     }
   };

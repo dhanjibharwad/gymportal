@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function ReceptionHeader() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userName, setUserName] = useState('Reception');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -18,12 +19,33 @@ export default function ReceptionHeader() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setUserName(data.user.name || 'Reception');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    };
+
+    fetchUserName();
+  }, []);
+
   const handleLogout = async () => {
     try {
-      // Add your logout logic here
-      window.location.href = '/auth/login';
+      // Call logout API to clear session cookie
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      // Always redirect to login
       window.location.href = '/auth/login';
     }
   };
@@ -44,10 +66,10 @@ export default function ReceptionHeader() {
             className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              R
+              {userName.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-700">Reception</span>
+              <span className="text-sm font-medium text-gray-700">{userName}</span>
               <span className="text-xs text-gray-500">Staff</span>
             </div>
             <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />

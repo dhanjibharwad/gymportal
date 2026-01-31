@@ -27,8 +27,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isReceptionRoute = pathname?.startsWith('/reception');
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isAuthRoute = pathname?.startsWith('/auth') || pathname?.startsWith('/setup');
   
-  if (isReceptionRoute || isAdminRoute) {
+  if (isReceptionRoute || isAdminRoute || isAuthRoute) {
     return <div className="bg-gray-50">{children}</div>;
   }
 

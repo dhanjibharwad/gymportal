@@ -1,386 +1,223 @@
+
+
 'use client';
 
-import React, { useState, FormEvent } from 'react';
-import { Mail, Lock, Eye, EyeOff, Dumbbell, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-interface FormErrors {
-  email?: string;
-  password?: string;
-}
-
-const GymLoginPage = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: ''
-  });
-
-  const [errors, setErrors] = useState<FormErrors>({});
+export default function LoginPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error for this field
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  // Validate form
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    // Email validation
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    if (validateForm()) {
-      setIsLoading(true);
+    if (!formData.email || !formData.password) {
+      setError('Email and password are required');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Direct login without company lookup
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.code === 'EMAIL_NOT_VERIFIED') {
+          router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
+          return;
+        }
+        setError(data.error || 'Login failed');
+        return;
+      }
+
+      // Redirect based on user role
+      const roleRoutes = {
+        'admin': '/admin/dashboard',
+        'reception': '/reception/dashboard'
+      };
       
-      // Simulate API call
-      setTimeout(() => {
-        console.log('=== LOGIN CREDENTIALS ===');
-        console.log('Email:', formData.email);
-        console.log('Password:', formData.password);
-        console.log('========================');
-        
-        alert('Login successful! Check console for credentials.');
-        setIsLoading(false);
-      }, 1500);
+      const redirectPath = roleRoutes[data.user.role as keyof typeof roleRoutes] || '/dashboard';
+      router.push(redirectPath);
+      router.refresh();
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-black">
-      
-      {/* Animated Background Pattern */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-500 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+    <div className="min-h-screen flex">
+      {/* Left Side - Background Image with Overlay */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('https://img.freepik.com/free-photo/strong-man-training-gym_1303-23478.jpg?semt=ais_hybrid&w=740&q=80')"
+          }}
+        ></div>
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/80 via-orange-500/70 to-red-600/60"></div>
+        
+        {/* Gym Icon Top Left */}
+        <div className="absolute top-8 left-8 z-10">
+          <div className="w-12 h-12 border-2 border-white/30 rounded-lg flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V3a1 1 0 011 1v1M7 4V3a1 1 0 011-1v0M7 4l1 16h8l1-16M7 4h10" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center px-16 text-white">
+          <h1 className="text-4xl font-bold mb-4 leading-tight">
+            Manage your gym<br />with confidence.
+          </h1>
+          <p className="text-lg text-white/80">
+            Secure access to your gym management system for<br />member tracking and facility operations.
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-8 left-8 text-white/60 text-sm">
+          © 2026 Eagle Gym. All rights reserved.
         </div>
       </div>
 
-      {/* Diagonal Stripe Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 40px,
-            rgba(255,255,255,0.03) 40px,
-            rgba(255,255,255,0.03) 80px
-          )`
-        }} />
-      </div>
-
-      {/* Main Content */}
-      <div className="relative min-h-screen flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-          
-          {/* Left Side - Branding */}
-          <div className="hidden lg:block space-y-8 text-white">
-            <div className="space-y-6">
-              {/* Logo */}
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-orange-500/50 rotate-12 hover:rotate-0 transition-transform duration-500">
-                  <Dumbbell className="w-10 h-10 text-white -rotate-12" />
-                </div>
-                <div>
-                  <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                    EAGLE<span className="text-orange-500"> GYM</span>
-                  </h1>
-                  <p className="text-slate-400 text-sm tracking-widest uppercase font-semibold">
-                    Management System
-                  </p>
-                </div>
-              </div>
-
-              {/* Tagline */}
-              <div className="space-y-4 border-l-4 border-orange-500 pl-6">
-                <h2 className="text-4xl font-black leading-tight">
-                  Transform Your
-                  <br />
-                  <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent">
-                    Strength Journey
-                  </span>
-                </h2>
-                <p className="text-slate-400 text-lg leading-relaxed max-w-md">
-                  Professional gym management system designed for trainers, receptionists, and gym administrators.
-                </p>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-6 pt-8">
-                <div className="space-y-1">
-                  <div className="text-3xl font-black text-orange-500">500+</div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wider">Members</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-3xl font-black text-orange-500">24/7</div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wider">Access</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-3xl font-black text-orange-500">15+</div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wider">Trainers</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Decorative Elements */}
-            <div className="relative pt-12">
-              <div className="absolute -left-8 top-0 w-1 h-32 bg-gradient-to-b from-orange-500 to-transparent" />
-              <div className="space-y-3 text-sm text-slate-500">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-500" />
-                  <span>Secure & Encrypted Login</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-500" />
-                  <span>Real-time Member Tracking</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-500" />
-                  <span>Advanced Analytics Dashboard</span>
-                </div>
-              </div>
-            </div>
+      {/* Right Side - White Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+        <div className="w-full max-w-md">
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">Welcome Back</h2>
+            <p className="text-gray-600 text-center">Please enter your details to sign in</p>
           </div>
 
-          {/* Right Side - Login Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-              
-              {/* Form Header */}
-              <div className="bg-gradient-to-r from-orange-600 to-red-600 px-8 py-6">
-                <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <Lock className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-white tracking-tight">
-                      STAFF LOGIN
-                    </h3>
-                    <p className="text-orange-100 text-sm">
-                      Enter your credentials
-                    </p>
-                  </div>
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start text-sm">
+                <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
               </div>
+            )}
 
-              {/* Form Body */}
-              <div className="p-8 space-y-6">
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  
-                  {/* Email Field */}
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">
-                      Email Address
-                    </label>
-                    <div className="relative group">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors">
-                        <Mail className={`w-5 h-5 ${
-                          errors.email 
-                            ? 'text-red-400' 
-                            : formData.email 
-                            ? 'text-orange-500' 
-                            : 'text-slate-400 group-focus-within:text-orange-500'
-                        }`} />
-                      </div>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className={`w-full pl-12 pr-4 py-4 bg-white/10 border-2 ${
-                          errors.email 
-                            ? 'border-red-500 focus:border-red-500' 
-                            : 'border-white/20 focus:border-orange-500'
-                        } rounded-xl text-white placeholder-slate-400 focus:outline-none focus:bg-white/15 transition-all duration-300`}
-                        placeholder="Enter your Email"
-                      />
-                      {errors.email && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                          <AlertCircle className="w-5 h-5 text-red-400" />
-                        </div>
-                      )}
-                    </div>
-                    {errors.email && (
-                      <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
-                        <span>•</span> {errors.email}
-                      </p>
-                    )}
-                  </div>
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition text-gray-900"
+                placeholder="admin@eaglegym.com"
+              />
+            </div>
 
-                  {/* Password Field */}
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 uppercase tracking-wide">
-                      Password
-                    </label>
-                    <div className="relative group">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors">
-                        <Lock className={`w-5 h-5 ${
-                          errors.password 
-                            ? 'text-red-400' 
-                            : formData.password 
-                            ? 'text-orange-500' 
-                            : 'text-slate-400 group-focus-within:text-orange-500'
-                        }`} />
-                      </div>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className={`w-full pl-12 pr-12 py-4 bg-white/10 border-2 ${
-                          errors.password 
-                            ? 'border-red-500 focus:border-red-500' 
-                            : 'border-white/20 focus:border-orange-500'
-                        } rounded-xl text-white placeholder-slate-400 focus:outline-none focus:bg-white/15 transition-all duration-300`}
-                        placeholder="Enter your Password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
-                        <span>•</span> {errors.password}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-white/20 bg-white/10 text-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-0 cursor-pointer"
-                      />
-                      <span className="text-slate-300 group-hover:text-white transition-colors">
-                        Remember me
-                      </span>
-                    </label>
-                    <button 
-                      type="button"
-                      className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="group relative w-full py-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black text-lg rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-                  >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      {isLoading ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          LOGGING IN...
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-5 h-5" />
-                          LOGIN TO DASHBOARD
-                        </>
-                      )}
-                    </span>
-                    {!isLoading && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    )}
-                  </button>
-                </form>
-
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-slate-900 px-3 text-slate-500 font-semibold tracking-wider">
-                      Secure Access
-                    </span>
-                  </div>
-                </div>
-
-                {/* Footer Info */}
-                <div className="text-center space-y-3">
-                  <p className="text-slate-400 text-sm">
-                    Need access? Contact your gym administrator
-                  </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-                    <Lock className="w-3 h-3" />
-                    <span>Protected by 256-bit encryption</span>
-                  </div>
-                </div>
+            {/* Password Input */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition text-gray-900"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Mobile Logo - Visible only on small screens */}
-            <div className="lg:hidden mt-8 text-center">
-              <div className="inline-flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/50">
-                  <Dumbbell className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <h1 className="text-2xl font-black text-white tracking-tight">
-                    GYM<span className="text-orange-500">FLEX</span>
-                  </h1>
-                  <p className="text-slate-500 text-xs tracking-widest uppercase font-semibold">
-                    Management System
-                  </p>
-                </div>
-              </div>
+            {/* Forgot Password */}
+            <div className="flex justify-end">
+              <Link href="/auth/forgot-password" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+                Forgot password?
+              </Link>
             </div>
-          </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-orange-600 text-white py-3 rounded-md font-medium hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+
+           {/* <p className="text-xs text-gray-500 text-center mt-4">
+  By continuing, you agree to our{" "}
+  <Link
+    href="/extra/privacy"
+    className="text-orange-600 hover:underline font-medium"
+  >
+    Privacy Policy
+  </Link>{" "}
+  and{" "}
+  <Link
+    href="/extra/terms"
+    className="text-orange-600 hover:underline font-medium"
+  >
+    Terms of Service
+  </Link>.
+</p> */}
+          </form>
         </div>
       </div>
-
-      {/* Bottom Gradient Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-      
-      {/* Corner Accents */}
-      <div className="absolute top-0 left-0 w-32 h-32 border-l-4 border-t-4 border-orange-500/30 rounded-tl-3xl" />
-      <div className="absolute bottom-0 right-0 w-32 h-32 border-r-4 border-b-4 border-orange-500/30 rounded-br-3xl" />
     </div>
   );
-};
-
-export default GymLoginPage;
+}
