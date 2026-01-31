@@ -19,7 +19,7 @@ export async function GET() {
   } catch (error) {
     console.error('Setup check error:', error);
     return NextResponse.json(
-      { error: 'Setup check failed' },
+      { error: 'Database connection failed. Please check your database configuration.' },
       { status: 500 }
     );
   }
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Admin setup error:', error);
     return NextResponse.json(
-      { error: 'Admin setup failed' },
+      { error: 'Database connection failed. Please check your database configuration.' },
       { status: 500 }
     );
   }
