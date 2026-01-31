@@ -187,7 +187,7 @@ function ResetPasswordForm() {
         ></div>
         
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/80 via-orange-500/70 to-red-600/60"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
         
         {/* Lock Icon Top Left */}
         <div className="absolute top-8 left-8 z-10">
