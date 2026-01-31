@@ -12,16 +12,19 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  Dumbbell
+  Dumbbell,
+  UserCog,
+  Clock
 } from 'lucide-react';
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Add Staff", href: "/admin/add-staff", icon: UserCog  },
   { label: "Members", href: "/admin/members", icon: Users },
   { label: "Add Members", href: "/admin/add-members", icon: UserPlus },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
 //   { label: "Expiry / Renewals", href: "/admin/renewals", icon: Calendar },
-  { label: "Payments History", href: "/admin/history", icon: Calendar },
+  { label: "Payments History", href: "/admin/history", icon: Clock  },
   // { label: "Membership Plans", href: "/admin/membership-plans", icon: User }
   { label: "Full Payments", href: "/admin/fullpayment", icon: User },
   { label: "Expired Membership", href: "/admin/expired", icon: User }
