@@ -13,7 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Dumbbell,
-  Clock
+  Clock,
+  BadgeCheck,
+  UserX 
 } from 'lucide-react';
 
 const navItems = [
@@ -24,8 +26,8 @@ const navItems = [
 //   { label: "Expiry / Renewals", href: "/reception/renewals", icon: Calendar },
   { label: "Payments History", href: "/reception/history", icon: Clock  },
   // { label: "Membership Plans", href: "/reception/membership-plans", icon: User }
-  { label: "Full Payments", href: "/reception/fullpayment", icon: User },
-  { label: "Expired Membership", href: "/reception/expired", icon: User }
+  { label: "Full Payments", href: "/reception/fullpayment", icon: BadgeCheck  },
+  { label: "Expired Membership", href: "/reception/expired", icon: UserX }
 ];
 
 export default function ReceptionSidebar() {
