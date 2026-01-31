@@ -114,7 +114,7 @@ const GymLoginPage = () => {
                 </div>
                 <div>
                   <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                    GYM<span className="text-orange-500">FLEX</span>
+                    EAGLE<span className="text-orange-500"> GYM</span>
                   </h1>
                   <p className="text-slate-400 text-sm tracking-widest uppercase font-semibold">
                     Management System
@@ -223,7 +223,7 @@ const GymLoginPage = () => {
                             ? 'border-red-500 focus:border-red-500' 
                             : 'border-white/20 focus:border-orange-500'
                         } rounded-xl text-white placeholder-slate-400 focus:outline-none focus:bg-white/15 transition-all duration-300`}
-                        placeholder="staff@ironfit.com"
+                        placeholder="Enter your Email"
                       />
                       {errors.email && (
                         <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -263,7 +263,7 @@ const GymLoginPage = () => {
                             ? 'border-red-500 focus:border-red-500' 
                             : 'border-white/20 focus:border-orange-500'
                         } rounded-xl text-white placeholder-slate-400 focus:outline-none focus:bg-white/15 transition-all duration-300`}
-                        placeholder="Enter your password"
+                        placeholder="Enter your Password"
                       />
                       <button
                         type="button"

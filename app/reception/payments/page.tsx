@@ -295,6 +295,16 @@ const PaymentsPage = () => {
     return matchesSearch && matchesStatus && matchesMode;
   });
 
+  const filteredPaymentHistory = paymentHistory.filter(transaction => {
+    const matchesSearch = transaction.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         transaction.phone_number.includes(searchTerm);
+    
+    const matchesStatus = statusFilter === 'all' || transaction.payment_status === statusFilter;
+    const matchesMode = paymentModeFilter === 'all' || transaction.payment_mode === paymentModeFilter;
+    
+    return matchesSearch && matchesStatus && matchesMode;
+  });
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       full: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
@@ -399,7 +409,7 @@ const PaymentsPage = () => {
             </button>
           </div>
           <span className="text-sm text-gray-500">
-            Total Records: <span className="font-semibold text-gray-900">{viewMode === 'summary' ? payments.length : paymentHistory.length}</span>
+            Total Records: <span className="font-semibold text-gray-900">{viewMode === 'summary' ? filteredPayments.length : filteredPaymentHistory.length}</span>
           </span>
         </div>
       </div>
@@ -607,7 +617,7 @@ const PaymentsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paymentHistory.map((transaction) => (
+          {filteredPaymentHistory.map((transaction) => (
             <div key={transaction.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="flex-shrink-0">
@@ -681,11 +691,15 @@ const PaymentsPage = () => {
             </div>
           ))}
           
-          {paymentHistory.length === 0 && (
+          {filteredPaymentHistory.length === 0 && (
             <div className="col-span-full text-center py-12">
               <Receipt className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No payment history found</h3>
-              <p className="mt-1 text-sm text-gray-500">No transaction records available.</p>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchTerm || statusFilter !== 'all' || paymentModeFilter !== 'all'
+                  ? 'Try adjusting your search or filters.'
+                  : 'No transaction records available.'}
+              </p>
             </div>
           )}
         </div>
