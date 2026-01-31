@@ -70,12 +70,12 @@ const Navbar: React.FC<NavbarProps> = ({
             </Link>
 
             {/* Start Now Button */}
-            <Link
+            {/* <Link
               href="/auth/member-register"
               className="px-6 py-2.5 bg-orange-500 text-white hover:bg-orange-600 transition-all duration-300 font-semibold text-sm"
             >
               START NOW
-            </Link>
+            </Link> */}
           </div>
 
           {/* Mobile menu button */}
