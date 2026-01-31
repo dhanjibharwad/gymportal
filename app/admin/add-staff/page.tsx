@@ -185,7 +185,7 @@ export default function AddStaffPage() {
                 ) : (
                   <>
                     <UserPlus className="w-4 h-4" />
-                    Add Reception Staff
+                    Add Reception Staff here
                   </>
                 )}
               </button>
